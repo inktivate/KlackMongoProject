@@ -18,7 +18,7 @@ function appendMessage(msg) {
      // expected output: "7/25/2016, 1:35:07 PM"
 
     messagesDiv.innerHTML +=
-      `<div class="message"><strong>${msg.sender}</strong>(${d.toLocaleString()}) : <br>${msg.message}</div>`;
+      `<div class="message"><strong>${msg.sender}</strong> (${d.toLocaleString()}) : ${msg.pic}<br>${msg.message}</div>`;
 }
 
 // redraw the entire list of users, indicating active/inactive

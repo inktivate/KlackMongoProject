@@ -1,13 +1,15 @@
-//1 - Your app should connect to a local MongoDB database named klack. -- Done
-//2 - Your app defines a Message model with an appropriate schema. -- Done
-//3 - Every posted message to klack gets stored as an instance of the Message model. 
-//4 - When the Node.js server for klack is exited and restarted, message history should be preserved.
-//5 - Last active times for users (used to show which users have been recently active) should 
-//   also be based on the message history in MongoDB and should persist across restarts of the server.
-
 const express = require('express')
 const querystring = require('querystring');
 const mongoose = require('mongoose');
+const multer = require('multer');
+const fs = require('fs');
+
+const upload = multer({
+    dest: "./public"
+})
+const type = upload.single('fileToUpload');
+
+let pics = {};
 
 const app = express()
 app.use(express.static("./public"))
@@ -58,7 +60,7 @@ app.get("/messages", (request, response) => {
     Message.find().sort({
         timestamp: 'asc'
     }).exec(function (err, msgs) {
-        msgs.forEach(msg => {  
+        msgs.forEach(msg => {
             messages.push(msg);
             if (!users[msg.sender]) {
                 users[msg.sender] = msg.timestamp
@@ -66,14 +68,14 @@ app.get("/messages", (request, response) => {
                 users[msg.sender] = msg.timestamp
             }
         });
-        
-        let usersSimple = Object.keys(users).map((x) => { 
+
+        let usersSimple = Object.keys(users).map((x) => {
             return ({
                 name: x,
                 active: (users[x] > requireActiveSince)
             })
         })
-       
+
         usersSimple.sort(userSortFn);
         usersSimple.filter((a) => (a.name !== request.query.for))
         lastMsgTimestamp = messages[messages.length - 1];
@@ -88,9 +90,9 @@ app.post("/messages", (request, response) => {
     // add a timestamp to each incoming message.
     request.body.timestamp = Date.now()
     users[request.body.sender] = request.body.timestamp;
-    
+
     //Create an instance of Message model
-    
+
     var message = new Message({
         sender: request.body.sender,
         message: request.body.message,
@@ -108,6 +110,11 @@ app.post("/messages", (request, response) => {
     // create a new list of users with a flag indicating whether they have been active recently
     response.status(201)
     response.send(request.body)
+})
+
+app.post('/upload', type, function (req, res) {
+    console.log(req.file.filename);
+    res.send("success");
 })
 
 app.listen(PORT, () => {
